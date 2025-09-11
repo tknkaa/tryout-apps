@@ -1,28 +1,22 @@
-use actix_web::{App, HttpServer, web};
+use actix_web::{App, HttpResponse, HttpServer, guard, web};
 use std::io;
-use std::sync::Mutex;
-
-struct AppStateWithCounter {
-    // The server can handle many requests at once.
-    counter: Mutex<i32>,
-}
-
-async fn index(data: web::Data<AppStateWithCounter>) -> String {
-    let mut counter = data.counter.lock().unwrap();
-    *counter += 1;
-    format!("Request number: {counter}")
-}
 
 #[actix_web::main]
 async fn main() -> io::Result<()> {
-    let counter = web::Data::new(AppStateWithCounter {
-        counter: Mutex::new(0),
-    });
-    // `move` forces the closure to take ownership of the variables it uses.
     HttpServer::new(move || {
         App::new()
-            .app_data(counter.clone())
-            .route("/", web::get().to(index))
+            .service(
+                web::scope("/")
+                    // If the request's Host header is www.rust-lang.org, it is routed to the handler.
+                    // other example: guard::Get()
+                    .guard(guard::Host("www.rust-lang.org"))
+                    .route("", web::to(|| async { HttpResponse::Ok().body("www") })),
+            )
+            .service(
+                web::scope("/")
+                    .guard(guard::Host("users.rust-lang.org"))
+                    .route("", web::to(|| async { HttpResponse::Ok().body("user") })),
+            )
     })
     .bind(("127.0.0.1", 8080))?
     .run()
