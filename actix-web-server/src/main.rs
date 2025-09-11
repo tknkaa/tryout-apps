@@ -1,22 +1,29 @@
-use actix_web::{App, HttpResponse, HttpServer, guard, web};
+use actix_web::{App, HttpResponse, HttpServer, Responder, get, web};
+use serde::Serialize;
 use std::io;
+
+#[derive(Clone, Debug, Serialize)]
+struct ToDo {
+    id: u32,
+    detail: String,
+}
+
+#[get("/todos")]
+async fn get_todos(data: web::Data<Vec<ToDo>>) -> impl Responder {
+    let todos = data.to_vec();
+    println!("{:?}", todos);
+    HttpResponse::Ok().json(todos)
+}
 
 #[actix_web::main]
 async fn main() -> io::Result<()> {
-    HttpServer::new(move || {
+    HttpServer::new(|| {
         App::new()
-            .service(
-                web::scope("/")
-                    // If the request's Host header is www.rust-lang.org, it is routed to the handler.
-                    // other example: guard::Get()
-                    .guard(guard::Host("www.rust-lang.org"))
-                    .route("", web::to(|| async { HttpResponse::Ok().body("www") })),
-            )
-            .service(
-                web::scope("/")
-                    .guard(guard::Host("users.rust-lang.org"))
-                    .route("", web::to(|| async { HttpResponse::Ok().body("user") })),
-            )
+            .app_data(web::Data::new(vec![ToDo {
+                id: 0,
+                detail: String::from("sleep"),
+            }]))
+            .service(get_todos)
     })
     .bind(("127.0.0.1", 8080))?
     .run()
