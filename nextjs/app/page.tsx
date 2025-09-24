@@ -1,29 +1,11 @@
-import { db } from "./db";
-import { user } from "./db/schema";
+import Form from "./components/form";
+import UserList from "./components/UserList";
 
 export default async function Home() {
-  const users = await db.select().from(user);
   return (
     <>
-      <table>
-        <caption>User List</caption>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Email</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map((user) => {
-            return (
-              <tr>
-                <td>{user.name}</td>
-                <td>{user.email}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+      <UserList />
+      <Form />
     </>
   );
 }
