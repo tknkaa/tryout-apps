@@ -1,15 +1,11 @@
 import type { Route } from "./+types/product";
 
-export async function clientLoader({
+export async function loader({
   params,
 }: Route.ClientLoaderArgs) {
   const res = await fetch(`https://jsonplaceholder.typicode.com/todos/${params.pid}`)
   const todo = await res.json();
   return todo
-}
-
-export function HydrateFallback() {
-  return <div>Loading...</div>
 }
 
 export default function Product({
